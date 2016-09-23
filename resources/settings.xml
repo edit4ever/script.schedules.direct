@@ -1,0 +1,6 @@
+<settings>
+<category label="SchedulesDirect">
+		<setting id="sd.username" label="Username" default="" type="text" />
+        <setting id="sd.password" label="Password" default="" type="text" option="hidden" />
+</category>
+</settings>
