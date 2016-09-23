@@ -3,4 +3,11 @@
 		<setting id="sd.username" label="Username" default="" type="text" />
         <setting id="sd.password" label="Password" default="" type="text" option="hidden" />
 </category>
+<category label="Automation">
+<setting id="login_update" label="Update On Login" type="bool"  default="false"/>
+<setting id="login_delay" label="Login Update Delay (minutes)" type="number"  default="2"/>
+<setting id="subscription_update" type="bool" label="Enable Update Timer" default="false"/>
+<setting id="subscription_timer" type="enum" values="6h|12h|24h|48h" label="Update Frequency" enable="eq(-1,true)" default="2"/>
+<setting id="service_time" type="text" label="Service Time" default="2000-01-01 00:00:00" visible="false"/>
+</category>
 </settings>
