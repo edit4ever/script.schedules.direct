@@ -218,6 +218,10 @@ def import_schedule():
         elements_parsed += 1
         c.execute("INSERT OR REPLACE INTO programs(station_id,p_id,title,logo,start,dur,desc) VALUES(?,?,?,?,?,?,?)",
                       [prg['station_id'], prg['p_id'], prg['title'], prg['logo'], prg['start'], prg['dur'], prg['desc']])
+                      
+    before = datetime.datetime.now() - datetime.timedelta(hours=int(plugin.get_setting("sd.purge")))
+    log(before)
+    c.execute("DELETE FROM programs WHERE start < ?", [before])
 
     conn.commit()
     c.close()
