@@ -26,7 +26,7 @@
 #
 import xbmcaddon
 
-ADDON = xbmcaddon.Addon(id='script.epg.direct')
+ADDON = xbmcaddon.Addon(id='script.schedules.direct')
 
 NO_DESCRIPTION = 30000
 CALCULATING_REMAINING_TIME = 30002

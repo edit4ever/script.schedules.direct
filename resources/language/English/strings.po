@@ -1,6 +1,6 @@
 # KODI language file
-# Addon Name: EPG-Direct
-# Addon id: script.epg.direct
+# Addon Name: Schedules Direct to xmltv
+# Addon id: script.schedules.direct
 # Addon Provider: bluezed
 msgid ""
 msgstr ""
