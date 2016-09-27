@@ -2,6 +2,7 @@
 <category label="SchedulesDirect">
 		<setting id="sd.username" label="Username" default="" type="text" />
         <setting id="sd.password" label="Password" default="" type="text" option="hidden" />
+        <setting id="sd.range" label="Days of guide data to load" type="slider" default="3" range="1,1,14" option="int" />
 </category>
 <category label="Automation">
 <setting id="login_update" label="Update On Login" type="bool"  default="false"/>
