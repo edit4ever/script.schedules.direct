@@ -195,6 +195,9 @@ def import_schedule():
     conn = sqlite3.connect(path)
     conn.row_factory = lambda cursor, row: row[0]
     c = conn.cursor()
+
+    c.execute("DELETE FROM programs")
+
     station_ids = c.execute('SELECT id FROM channels').fetchall()
 
     date_local = datetime.datetime.now()
