@@ -119,7 +119,7 @@ def remove_provider():
                     xbmcgui.Dialog().notification(xbmcaddon.Addon().getAddonInfo('name'), 'Lineup "%s" deleted' % name,
                                                   os.path.join(xbmcaddon.Addon().getAddonInfo('path'), 'icon.png'), 5000)
 
-@plugin.route('/edit_channels')
+@plugin.route('/add_channels')
 def add_channels():
     user = plugin.get_setting('sd.username')
     passw = plugin.get_setting('sd.password')
@@ -165,6 +165,25 @@ def add_channels():
         channel = station_list[s]
         c.execute("INSERT OR REPLACE INTO channels(lineup,id,title,logo) VALUES(?,?,?,?)",
                       [lineup,channel.id,channel.title,channel.logo])
+    conn.commit()
+    c.close()
+
+@plugin.route('/remove_channels')
+def remove_channels():
+    path = xbmc.translatePath("special://profile/addon_data/script.schedules.direct/sd.db")
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM channels")
+    channels = c.fetchall()
+    channels = sorted(channels, key=lambda x: x["title"])
+    names = [x["title"] for x in channels]
+    sel = xbmcgui.Dialog().multiselect('Remove Channels', names)
+    if not sel:
+        return
+    for s in sel:
+        c.execute("DELETE FROM channels WHERE id=?",[channels[s]["id"]])
     conn.commit()
     c.close()
 
@@ -290,6 +309,12 @@ def index():
     {
         'label': 'Add Channels',
         'path': plugin.url_for('add_channels'),
+        'thumbnail':get_icon_path('settings'),
+    })
+    items.append(
+    {
+        'label': 'Remove Channels',
+        'path': plugin.url_for('remove_channels'),
         'thumbnail':get_icon_path('settings'),
     })
     items.append(
