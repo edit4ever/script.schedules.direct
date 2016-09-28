@@ -273,8 +273,9 @@ def export_xmltv():
         start = start.strftime("%Y%m%d%H%M%S +0000")
         end = end.strftime("%Y%m%d%H%M%S +0000")
         f.write('<programme start="%s" stop="%s" channel="%s">\n' % (start.encode("utf8"),end.encode("utf8"),program["station_id"].encode("utf8")))
-        f.write('<title lang="en">%s</title>\n' % cgi.escape(program["title"]).encode("utf8"))
-        f.write('<desc lang="en">%s</desc>\n' % cgi.escape(program["desc"]).encode("utf8"))
+        f.write('  <title lang="en">%s</title>\n' % cgi.escape(program["title"]).encode("utf8"))
+        f.write('  <desc lang="en">%s</desc>\n' % cgi.escape(program["desc"]).encode("utf8"))
+        f.write('  <icon src="%s" />\n' % program["logo"].encode("utf8"))
         f.write('</programme>\n')
 
     f.write("</tv>\n")
