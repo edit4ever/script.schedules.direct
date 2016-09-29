@@ -21,7 +21,7 @@
 import datetime
 import requests
 
-import xbmcgui
+import xbmcgui,xbmcvfs,xbmc
 from utils import *
 from strings import *
 
@@ -308,31 +308,51 @@ class SdAPI(object):
 
         prg_dict = {}
         schedule = []
+        f = xbmcvfs.File(r"c:\temp\logos.txt","wb")
         for record in resp:
             programID = record["programID"]
             prg_dict[programID] = {}
             data = record["data"]
             #xbmc.log(repr(data))
-            banners = [x for x in data if ("category" in x) and x["category"].startswith("Banner")]
-            #xbmc.log(repr(("XXX",banners)))
-            if len(banners) > 0:
-                new_banners = [x for x in banners if x["aspect"] == "16x9"]
-                #xbmc.log(repr(("new16x9",new_banners)))
+            banners = []
+            for image_type in ["Banner","Logo","Iconic","Box Art","Poster Art","Photo","Scene Still","Staple"]:
+                new_banners = [x for x in data if ("category" in x) and x["category"].startswith(image_type)]
                 if len(new_banners) > 0:
-                    banners = new_banners
-                    #xbmc.log(repr(("16x9",banners)))
-                    new_banners = [x for x in new_banners if x["size"] == "Md"]
+                    #xbmc.log(repr(("image_type",image_type,new_banners)))
+                    aspect = ["unknown","16x9","4x3","3x4","3x2","2x3"]
+                    banners = sorted(new_banners, key=lambda x: aspect.index(x.get("aspect","unknown")))
+                    #xbmc.log(repr(("sorted",image_type,banners)))
+                    break
+
+                '''
+                #xbmc.log(repr(("XXX",banners)))
+                if len(banners) > 0:
+                    new_banners = [x for x in banners if ("size" in x) and (x["size"] == "Md")]
+                    #xbmc.log(repr(("new16x9",new_banners)))
                     if len(new_banners) > 0:
                         banners = new_banners
-                        #xbmc.log(repr(("Md",banners)))
-            else:
-                prg_dict[programID]["logo"] = ""
-                continue
-
+                        #xbmc.log(repr(("16x9",banners)))
+                        new_banners = [x for x in new_banners if ("aspect" in x) and (x["aspect"] == "16x9")]
+                        if len(new_banners) > 0:
+                            banners = new_banners
+                            #xbmc.log(repr(("Md",banners)))
+                else:
+                    prg_dict[programID]["logo"] = ""
+                    xbmc.log(repr(("YYY",data)))
+                    continue
+                '''
             #xbmc.log(repr(("ZZZ",banners)))
-            logo = banners[0]["uri"]
+            if len(banners) > 0:
+                logo = banners[0]["uri"]
+
+            else:
+                logo = ""
+                xbmc.log(repr(("???",programID,record)))
             if logo.startswith("assets"):
                 logo = "https://s3.amazonaws.com/schedulesdirect/"+logo
+            s = "%s\n" % logo
+            f.write(s.encode("utf8"))                
+            #xbmc.log(repr(("logo",logo)))
             prg_dict[programID]["logo"] = logo
 
         #xbmc.log(repr(prg_dict))
