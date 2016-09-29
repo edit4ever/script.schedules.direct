@@ -296,3 +296,120 @@ class SdAPI(object):
             if not progress_callback(100.0 / prg_count * elements_parsed):
                 raise SourceException()
         return schedule
+
+
+    def get_programs(self, programs, progress_callback):
+
+        resp = self._post('metadata/programs', programs)
+
+        if progress_callback:
+            if not progress_callback(10):
+                raise SourceException()
+
+        prg_dict = {}
+        schedule = []
+        for record in resp:
+            programID = record["programID"]
+            prg_dict[programID] = {}
+            data = record["data"]
+            #xbmc.log(repr(data))
+            banners = [x for x in data if ("category" in x) and x["category"].startswith("Banner")]
+            #xbmc.log(repr(("XXX",banners)))
+            if len(banners) > 0:
+                new_banners = [x for x in banners if x["aspect"] == "16x9"]
+                #xbmc.log(repr(("new16x9",new_banners)))
+                if len(new_banners) > 0:
+                    banners = new_banners
+                    #xbmc.log(repr(("16x9",banners)))
+                    new_banners = [x for x in new_banners if x["size"] == "Md"]
+                    if len(new_banners) > 0:
+                        banners = new_banners
+                        #xbmc.log(repr(("Md",banners)))
+            else:
+                prg_dict[programID]["logo"] = ""
+                continue
+
+            #xbmc.log(repr(("ZZZ",banners)))
+            logo = banners[0]["uri"]
+            if logo.startswith("assets"):
+                logo = "https://s3.amazonaws.com/schedulesdirect/"+logo
+            prg_dict[programID]["logo"] = logo
+
+        #xbmc.log(repr(prg_dict))
+        return prg_dict
+
+        '''
+                for program in record['programs']:
+                    p_id = program['programID']
+                    start = program['airDateTime']
+                    dur = program['duration']
+                    prg_list.append(p_id)
+                    schedule.append({'station_id': station_id, 'p_id': p_id, 'start': start,
+                                     'dur': dur, 'title': '', 'desc': '', 'logo': ''})
+
+        prg_count = len(prg_list)
+        if prg_count < 3000:
+            xbmc.log("[%s] Number of programs requested: %d" %
+                     (ADDON.getAddonInfo('id'), prg_count), xbmc.LOGDEBUG)
+            p_resp = self._post('programs', prg_list)
+            if progress_callback:
+                if not progress_callback(75):
+                    raise SourceException()
+        else:
+            xbmc.log("[%s] Number of programs requested: %d... Requesting batches of 3000" %
+                     (ADDON.getAddonInfo('id'), prg_count), xbmc.LOGDEBUG)
+            # Deal with more data requestes
+            p_resp = []
+            batches = list(grouper(3000, prg_list))
+            step = (75-10) / len(batches)
+            for ctr, batch in enumerate(batches):
+                batch = filter(None, batch)
+                xbmc.log("[%s] Requesting batch %d with %d items" %
+                         (ADDON.getAddonInfo('id'), ctr+1, len(batch)), xbmc.LOGDEBUG)
+                p_resp += self._post('programs', batch)
+                if progress_callback:
+                    if not progress_callback(10 + (ctr * step)):
+                        raise SourceException()
+
+        elements_parsed = 0
+        for prg_data in p_resp:
+            if 'programID' in prg_data:
+                prg_id = prg_data['programID']
+            else:
+                continue
+
+            # find the idx in the schedule
+            idx = []
+            for i, s in enumerate(schedule):
+                if s['p_id'] == prg_id:
+                    idx.append(i)
+
+            title = ''
+            if 'titles' in prg_data and len(prg_data['titles']) > 0:
+                if 'title120' in prg_data['titles'][0]:
+                    title = prg_data['titles'][0]['title120']
+
+            desc = ''
+            if 'episodeTitle150' in prg_data:
+                desc = prg_data['episodeTitle150'] + ' - '
+
+            if 'descriptions' in prg_data:
+                tmp_d = None
+                if 'description1000' in prg_data['descriptions']:
+                    tmp_d = prg_data['descriptions']['description1000']
+                elif 'description100' in prg_data['descriptions']:
+                    tmp_d = prg_data['descriptions']['description100']
+
+                if tmp_d and len(tmp_d) > 0 and 'description' in tmp_d[0]:
+                    desc += tmp_d[0]['description']
+
+            for i in idx:
+                schedule[i]['title'] = title
+                schedule[i]['desc'] = desc
+
+        elements_parsed += 1
+        if progress_callback and elements_parsed % 100 == 0:
+            if not progress_callback(100.0 / prg_count * elements_parsed):
+                raise SourceException()
+        return schedule
+        '''

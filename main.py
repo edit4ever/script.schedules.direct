@@ -241,7 +241,23 @@ def import_schedule():
         c.execute("INSERT OR REPLACE INTO programs(station_id,p_id,title,logo,start,dur,desc) VALUES(?,?,?,?,?,?,?)",
                       [prg['station_id'], prg['p_id'], prg['title'], prg['logo'], prg['start'], prg['dur'], prg['desc']])
 
+    #conn.commit()
+    
+    c.execute("SELECT p_id FROM programs")
+    ids = c.fetchall()
+    #xbmc.log(repr(ids))
+    programs = sd.get_programs(ids,progress_callback)
+    for prg in programs:
+        id = prg
+        logo = programs[id]["logo"]
+        xbmc.log(repr((id,logo)))
+        #xbmc.log(repr(result))
+        #elements_parsed += 1
+        c.execute("UPDATE programs SET logo=? WHERE p_id=?", [logo,id])
+
     conn.commit()
+    
+    
     c.close()
 
 @plugin.route('/export_xmltv')
