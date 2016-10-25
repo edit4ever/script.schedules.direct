@@ -20,6 +20,7 @@
 
 import datetime
 import requests
+import re
 
 import xbmcgui,xbmcvfs,xbmc
 from utils import *
@@ -301,27 +302,41 @@ class SdAPI(object):
     def get_programs(self, programs, progress_callback):
 
         resp = self._post('metadata/programs', programs)
-
+        #xbmc.log(repr(resp))
         if progress_callback:
             if not progress_callback(10):
                 raise SourceException()
 
         prg_dict = {}
         schedule = []
-        f = xbmcvfs.File(r"c:\temp\logos.txt","wb")
+        f = xbmcvfs.File(r"c:\temp\logos.html","wb")
         for record in resp:
             programID = record["programID"]
             prg_dict[programID] = {}
+            prg_dict[programID]["logo"] = ''
             data = record["data"]
             #xbmc.log(repr(data))
             banners = []
-            for image_type in ["Banner","Logo","Iconic","Box Art","Poster Art","Photo","Scene Still","Staple"]:
+            found = False
+            for image_type in ["Banner","Banner-LO","Banner-L1","Banner-L2","Banner-L3","Logo","Iconic","Box Art","Poster Art","Photo","Scene Still","Staple"]:
                 new_banners = [x for x in data if ("category" in x) and x["category"].startswith(image_type)]
                 if len(new_banners) > 0:
                     #xbmc.log(repr(("image_type",image_type,new_banners)))
-                    aspect = ["unknown","16x9","4x3","3x4","3x2","2x3"]
+                    aspect = ["16x9","4x3","3x4","3x2","2x3","unknown"]
                     banners = sorted(new_banners, key=lambda x: aspect.index(x.get("aspect","unknown")))
                     #xbmc.log(repr(("sorted",image_type,banners)))
+                    for b in banners:
+                        logo = b["uri"]
+                        if logo.startswith("assets"):
+                            logo = "https://s3.amazonaws.com/schedulesdirect/"+logo
+                        logo = re.sub("^https://","http://",logo)
+                        r = requests.get(logo)
+                        if r.status_code == requests.codes.ok:
+                            prg_dict[programID]["logo"] = logo
+                            #xbmc.log(repr(("logo",logo)))
+                            found = True
+                            break
+                if found:
                     break
 
                 '''
@@ -350,10 +365,16 @@ class SdAPI(object):
                 xbmc.log(repr(("???",programID,record)))
             if logo.startswith("assets"):
                 logo = "https://s3.amazonaws.com/schedulesdirect/"+logo
-            s = "%s\n" % logo
+            s = '<h1>%s</h1><br>\n' % programID
             f.write(s.encode("utf8"))                
+            for b in banners:
+                logo = b["uri"]
+                if logo.startswith("assets"):
+                    logo = "https://s3.amazonaws.com/schedulesdirect/"+logo
+                s = '<img src="%s"><br>\n%s<br>\n' % (logo,logo)
+                f.write(s.encode("utf8"))
             #xbmc.log(repr(("logo",logo)))
-            prg_dict[programID]["logo"] = logo
+            #prg_dict[programID]["logo"] = logo
 
         #xbmc.log(repr(prg_dict))
         return prg_dict
